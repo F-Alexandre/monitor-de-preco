@@ -36,61 +36,87 @@
 document.addEventListener('DOMContentLoaded', async () => {
     const inputUrl = document.getElementById('url');
     const inputPreco = document.getElementById('precoAlvo');
-    const btnSalvar = document.getElementById('salvar');
+    const btnAdicionar = document.getElementById('adicionar');
+    const divLista = document.getElementById('listaProdutos');
     const divStatus = document.getElementById('status');
 
-    // Carrega os dados salvos anteriormente (se existirem)
-    const dados = await chrome.storage.local.get(['prodUrl', 'prodPrecoAlvo', 'ultimoPreco']);
-    if (dados.prodUrl) {
-        inputUrl.value = dados.prodUrl;
-        inputPreco.value = dados.prodPrecoAlvo;
-        const precoExibir = dados.ultimoPreco ? dados.ultimoPreco : 'Aguardando checagem...';
-        divStatus.innerHTML = '🟢 Monitorando!<br>Último preço visto: ' + precoExibir;
+    // Função para renderizar a lista no popup
+    async function atualizarInterface() {
+        const dados = await chrome.storage.local.get(['listaProdutos']);
+        const produtos = dados.listaProdutos || [];
+        
+        divLista.innerHTML = '';
+        if (produtos.length === 0) {
+            divStatus.innerText = "Nenhum produto monitorado.";
+            return;
+        }
+        divStatus.innerText = 🟢 Monitorando ${produtos.length} produto(s)!;
+
+        produtos.forEach((prod, index) => {
+            const item = document.createElement('div');
+            item.className = 'produto-item';
+            item.innerHTML = 
+                <div class="produto-info">
+                    <strong>${prod.loja.toUpperCase()}</strong> - Alvo: R$ ${prod.alvo}<br>
+                    <span style="color:#777;">Último visto: ${prod.ultimoPreco || 'Aguardando...'}</span>
+                </div>
+                <button class="btn-remover" data-index="${index}">X</button>
+            ;
+            divLista.appendChild(item);
+        });
+
+        // Adiciona evento nos botões de remover
+        document.querySelectorAll('.btn-remover').forEach(btn => {
+            btn.addEventListener('click', async (e) => {
+                const idx = e.target.getAttribute('data-index');
+                produtos.splice(idx, 1);
+                await chrome.storage.local.set({ listaProdutos: produtos });
+                atualizarInterface();
+            });
+        });
     }
 
-    // Salva as novas configurações e faz a busca direta
-    btnSalvar.addEventListener('click', async () => {
-        const url = inputUrl.value.trim();
-        const precoAlvo = parseFloat(inputPreco.value);
+    // Identifica a loja pelo link
+    function descobrirLoja(url) {
+        if (url.includes('amazon')) return 'Amazon';
+        if (url.includes('mercadolivre')) return 'Mercado Livre';
+        if (url.includes('magazineluiza') || url.includes('magalu')) return 'Magalu';
+        return 'Outro Site';
+    }
 
-        if (!url || isNaN(precoAlvo)) {
-            divStatus.innerText = "❌ Preencha o link e o preço alvo!";
+    // Ação do botão adicionar
+    btnAdicionar.addEventListener('click', async () => {
+        const url = inputUrl.value.trim();
+        const alvo = parseFloat(inputPreco.value);
+
+        if (!url || isNaN(alvo)) {
+            alert("Preencha o link e o preço alvo!");
             return;
         }
 
-        divStatus.innerText = "💾 Salvando e buscando preço atual...";
+        const dados = await chrome.storage.local.get(['listaProdutos']);
+        const produtos = dados.listaProdutos || [];
 
-        // Faz a busca do preço diretamente pelo popup para evitar o erro de conexão
-        try {
-            const resposta = await fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0' } });
-            const htmlTexto = await resposta.text();
+        // Cria o novo objeto do produto
+        const novoProduto = {
+            id: 'prod_' + Date.now(), // ID único para o produto
+            url: url,
+            alvo: alvo,
+            loja: descobrirLoja(url),
+            ultimoPreco: 'Buscando...'
+        };
 
-            // Regex para capturar o preço no HTML bruto da Amazon
-            const regexPreco = /<span class="a-price-whole">([0-9.,&nbsp;]+)/;
-            const match = htmlTexto.match(regexPreco);
-
-            let precoVisto = 'Preço não localizado na página.';
-            
-            if (match && match[1]) {
-                let precoLimpo = match[1].replace(/[.&nbsp;,]/g, '').trim();
-                let precoAtual = parseFloat(precoLimpo);
-                if (!isNaN(precoAtual)) {
-                    precoVisto = "R$ " + precoAtual.toLocaleString('pt-BR');
-                }
-            }
-
-            // Grava tudo diretamente no armazenamento local
-            await chrome.storage.local.set({
-                prodUrl: url,
-                prodPrecoAlvo: precoAlvo,
-                ultimoPreco: precoVisto
-            });
-
-            divStatus.innerHTML = '🟢 Monitorando!<br>Último preço visto: ' + precoVisto;
-
-        } catch (erro) {
-            console.error(erro);
-            divStatus.innerText = "❌ Erro ao conectar com o site.";
-        }
+        produtos.push(novoProduto);
+        await chrome.storage.local.set({ listaProdutos: produtos });
+        
+        inputUrl.value = '';
+        inputPreco.value = '';
+        
+        atualizarInterface();
+        
+        // Avisa o background para testar a lista imediatamente
+        chrome.runtime.sendMessage({ acao: "verificar_lista_agora" });
     });
+
+    atualizarInterface();
 });

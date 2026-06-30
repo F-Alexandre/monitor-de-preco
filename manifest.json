@@ -1,9 +1,9 @@
 {
 
     "manifest_version":3,
-    "name":"Monitor de Preco Ps5",
-    "version":"2.0",
-    "description":"Veja o preco do Ps5 na pagina atual com um click",
+    "name":"Monitor de Preco do Ps5 multisites",
+    "version":"3.0",
+    "description":"Monitora multiplos produtos e sites em segundo plano",
     "permissions":[
         "activeTab",
         "scripting",
@@ -12,7 +12,8 @@
         "notifications"
     ],
     "host_permissions":[
-       "https://*.amazon.com.br/*"
+       "https://*/*",
+       // "https://*.amazon.com.br/*"
     ],
     "background":{
       "service_worker":"background.js "

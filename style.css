@@ -1,5 +1,5 @@
 body{
-    width: 220px;
+    width: 320px;
     font-family: Arial, Helvetica, sans-serif;
     padding: 12px;
     text-align: center;
@@ -10,7 +10,7 @@ h3{
     color: #00439c;
 }
 input{
-    width: 90%;
+    width: 93%;
     padding: 6px;
     margin-bottom: 8px;
     border: 1px solid #ccc;
@@ -26,14 +26,46 @@ button{
     cursor: pointer;
     font-weight: bold;
     width: 100%;
+    margin-bottom: 10px;
 }
 
 button:hover{background-color: #003070;}
+.produto-item{
+    border-bottom: 1px solid #eee;
+    padding: 8px 0;
+    font-size: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.produto-info{
+    width: 80%;
+}
+.btn-remover{
+    background-color: #cc0000;
+    color: white;
+    border: none;
+    padding: 4px 8px;
+    border-radius: 3px;
+    cursor: pointer;
+    font-size: 10px;
+    width: auto;
+    margin: 0;
+}
+.btn-remover:hover{
+    background-color: #990000;
+}
+#listaProdutos{
+    max-height: 200px;
+    overflow-y: auto;
+    margin-top: 10px;
+}
 #status{
-   margin-top: 10px;
-   font-size: 13px;
+   /*margin-top: 10px;*/
+   font-size: 12px;
    color: #555;
    font-style: italic; 
+   text-align: center;
 }
 .info{
     font-size: 11px;
