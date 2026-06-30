@@ -1,0 +1,24 @@
+{
+
+    "manifest_version":3,
+    "name":"Monitor de Preco Ps5",
+    "version":"2.0",
+    "description":"Veja o preco do Ps5 na pagina atual com um click",
+    "permissions":[
+        "activeTab",
+        "scripting",
+        "storage",
+        "alarms",
+        "notifications"
+    ],
+    "host_permissions":[
+       "https://*.amazon.com.br/*"
+    ],
+    "background":{
+      "service_worker":"background.js "
+    },
+
+    "action":{
+        "default_popup":"popup.html"
+    }
+}
