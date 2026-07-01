@@ -2,13 +2,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     const inputUrl = document.getElementById('url');
     const inputPreco = document.getElementById('precoAlvo');
     const btnAdicionar = document.getElementById('adicionar');
-    const divLista = document.getElementById('listaProdutos');
+    const divLista = document.getElementById('listarProdutos');
     const divStatus = document.getElementById('status');
 
     // Função para renderizar a lista no popup
     async function atualizarInterface() {
-        const dados = await chrome.storage.local.get(['listaProdutos']);
-        const produtos = dados.listaProdutos || [];
+        const dados = await chrome.storage.local.get(['listarProdutos']);
+        const produtos = dados.listarProdutos || [];
         
         divLista.innerHTML = '';
         if (produtos.length === 0) {
@@ -36,7 +36,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             btn.addEventListener('click', async (e) => {
                 const idx = e.target.getAttribute('data-index');
                 produtos.splice(idx, 1);
-                await chrome.storage.local.set({ listaProdutos: produtos });
+                await chrome.storage.local.set({ listarProdutos: produtos });
                 atualizarInterface();
             });
         });
@@ -60,8 +60,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             return;
         }
 
-        const dados = await chrome.storage.local.get(['listaProdutos']);
-        const produtos = dados.listaProdutos || [];
+        const dados = await chrome.storage.local.get(['listarProdutos']);
+        const produtos = dados.listarProdutos || [];
 
         // Cria o novo objeto do produto
         const novoProduto = {
@@ -73,7 +73,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         };
 
         produtos.push(novoProduto);
-        await chrome.storage.local.set({ listaProdutos: produtos });
+        await chrome.storage.local.set({ listarProdutos: produtos });
         
         inputUrl.value = '';
         inputPreco.value = '';

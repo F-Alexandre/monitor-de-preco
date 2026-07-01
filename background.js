@@ -49,11 +49,11 @@ async function executarMonitoramentoGeral() {
 
         // Dispara notificação usando o ID ÚNICO do produto (Impede um site de apagar o outro!)
         if (precoAtual <= parseFloat(prod.alvo)) {
-          chrome.notifications.create(alerta_${prod.id}, {
+          chrome.notifications.create('alerta_' + prod.id, {
             type: 'basic',
             iconUrl: 'https://images.unsplash.com/photo-1606813907291-d86efa9b94db?w=128&h=128&fit=crop',
-            title: 🔥 PREÇO BAIXOU NA ${prod.loja.toUpperCase()}!,
-            message: O produto atingiu R$ ${precoAtual.toLocaleString('pt-BR')}! Clique para abrir.,
+            title:  "PREÇO BAIXOU NA "+ prod.loja.toUpperCase(),
+            message: "O produto atingiu R$ " +  precoAtual.toLocaleString('pt-BR')+" Clique para abrir",
             priority: 2
           });
         }
