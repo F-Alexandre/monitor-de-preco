@@ -1,59 +1,68 @@
 chrome.runtime.onInstalled.addListener(() => {
-  chrome.alarms.create('checarPrecosLoop', { periodInMinutes: 5 });
-  console.log("Alarme multissites de 5 minutos criado!");
+  chrome.alarms.create('verificar_precos_alarme', { periodInMinutes: 5 });
+  console.log('⏰ Alarme de monitoramento configurado.');
 });
 
-chrome.alarms.onAlarm.addListener((alarm) => {
-  if (alarm.name === 'checarPrecosLoop') {
+chrome.alarms.onAlarm.addListener((alarme) => {
+  if (alarme.name === 'verificar_precos_alarme') {
     executarMonitoramentoGeral();
   }
 });
 
-chrome.runtime.onMessage.addListener((request) => {
-  if (request.acao === "verificar_lista_agora") {
+chrome.runtime.onMessage.addListener((mensagem, sender, sendResponse) => {
+  if (mensagem.acao === "verificar_lista_agora") {
     executarMonitoramentoGeral();
   }
 });
 
 async function executarMonitoramentoGeral() {
-  const dados = await chrome.storage.local.get(['listaProdutos']);
-  const produtos = dados.listaProdutos || [];
+  const dados = await chrome.storage.local.get(['listarProdutos']);
+  const produtos = dados.listarProdutos || [];
+  
   if (produtos.length === 0) return;
 
-  // Percorre cada produto da lista
   for (let i = 0; i < produtos.length; i++) {
     let prod = produtos[i];
     
     try {
-      const resposta = await fetch(prod.url, { headers: { 'User-Agent': 'Mozilla/5.0' } });
+      const resposta = await fetch(prod.url, { 
+        headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36' } 
+      });
       const htmlTexto = await resposta.text();
       let precoAtual = null;
 
-      // Regex dinâmico dependendo da loja
       if (prod.loja === 'Amazon') {
         const match = htmlTexto.match(/<span class="a-price-whole">([0-9.,&nbsp;]+)/);
         if (match && match[1]) {
           precoAtual = parseFloat(match[1].replace(/[.&nbsp;,]/g, '').trim());
         }
-      } else if (prod.loja === 'Mercado Livre') {
-        // Regex adaptado para a estrutura clássica de preço do Mercado Livre
-        const match = htmlTexto.match(/<span class="andes-money-amount__fraction">([0-9.]+)/);
-        if (match && match[1]) {
-          precoAtual = parseFloat(match[1].replace(/[.]/g, '').trim());
+      } 
+      else if (prod.loja === 'Mercado Livre') {
+        let matchMeta = htmlTexto.match(/<meta[^>]*itemprop="price"[^>]*content="([^"]+)"/i);
+        let matchJson = htmlTexto.match(/"price"\s*:\s*"?([0-9.]+)"?/i);
+        let matchClasse = htmlTexto.match(/<span class="[a-zA-Z0-9_-]*money-amount__fraction"[^>]*>([0-9.]+)/);
+
+        if (matchMeta && matchMeta[1]) {
+          precoAtual = parseFloat(matchMeta[1]);
+        } else if (matchJson && matchJson[1]) {
+          precoAtual = parseFloat(matchJson[1]);
+        } else if (matchClasse && matchClasse[1]) {
+          precoAtual = parseFloat(matchClasse[1].replace(/[.]/g, '').trim());
         }
       }
 
-      // Se encontrou o preço de forma válida
       if (precoAtual && !isNaN(precoAtual)) {
         produtos[i].ultimoPreco = "R$ " + precoAtual.toLocaleString('pt-BR');
 
-        // Dispara notificação usando o ID ÚNICO do produto (Impede um site de apagar o outro!)
         if (precoAtual <= parseFloat(prod.alvo)) {
-          chrome.notifications.create('alerta_' + prod.id, {
+          // CORRIGIDO: String limpa usando concatenação simples para evitar o SyntaxError
+          const idNotificacao = 'alerta_' + prod.id;
+
+          chrome.notifications.create(idNotificacao, {
             type: 'basic',
-            iconUrl: 'https://images.unsplash.com/photo-1606813907291-d86efa9b94db?w=128&h=128&fit=crop',
-            title:  "PREÇO BAIXOU NA "+ prod.loja.toUpperCase(),
-            message: "O produto atingiu R$ " +  precoAtual.toLocaleString('pt-BR')+" Clique para abrir",
+            iconUrl: 'icon.png', 
+            title: '🔥 PREÇO BAIXOU NA ' + prod.loja.toUpperCase() + '!',
+            message: 'O produto atingiu R$ ' + precoAtual.toLocaleString('pt-BR') + '! Clique para abrir.',
             priority: 2
           });
         }
@@ -65,14 +74,13 @@ async function executarMonitoramentoGeral() {
     }
   }
 
-  // Atualiza a lista com os novos preços vistos
-  await chrome.storage.local.set({ listaProdutos: produtos });
+  await chrome.storage.local.set({ listarProdutos: produtos });
 }
 
 // Abre o link correto do produto que foi clicado na notificação
 chrome.notifications.onClicked.addListener(async (notificationId) => {
-  const dados = await chrome.storage.local.get(['listaProdutos']);
-  const produtos = dados.listaProdutos || [];
+  const dados = await chrome.storage.local.get(['listarProdutos']);
+  const produtos = dados.listarProdutos || [];
   
   // Extrai o ID do produto de dentro do ID da notificação (ex: alerta_prod_123456)
   const prodId = notificationId.replace('alerta_', '');
