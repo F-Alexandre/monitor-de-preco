@@ -15,7 +15,7 @@ Uma extensão para o navegador Microsoft Edge (Manifest V3) desenvolvida para mo
 Os arquivos devem estar localizados diretamente na raiz da pasta do projeto:
 
 ```text
-📁 monitort-ps5
+📁 monitor-ps5
    ├── manifest.json      # Configurações e permissões da extensão
    ├── icon.png           # Icone das notificações
    ├── popup.html         # Interface visual do painel da extensão
