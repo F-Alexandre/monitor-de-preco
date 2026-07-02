@@ -17,7 +17,9 @@ Os arquivos devem estar localizados diretamente na raiz da pasta do projeto:
 ```text
 📁 monitort-ps5
    ├── manifest.json      # Configurações e permissões da extensão
+   ├── icon.png           # Icone das notificações
    ├── popup.html         # Interface visual do painel da extensão
    ├── popup.js           # Lógica de inserção, remoção e busca inicial
    ├── background.js      # Robô (Service Worker) que roda em segundo plano
    └── README.md          # Documentação do projeto
+```
