@@ -38,6 +38,7 @@ async function executarMonitoramentoGeral() {
         }
       } 
       else if (prod.loja === 'Mercado Livre') {
+        let matchOg = htmlTexto.match(/meta[^>]*property="og:price:amount"[^>]*content="([^"]+)"/);
         let matchMeta = htmlTexto.match(/<meta[^>]*itemprop="price"[^>]*content="([^"]+)"/i);
         let matchJson = htmlTexto.match(/"price"\s*:\s*"?([0-9.]+)"?/i);
         let matchClasse = htmlTexto.match(/<span class="[a-zA-Z0-9_-]*money-amount__fraction"[^>]*>([0-9.]+)/);
